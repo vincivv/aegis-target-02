@@ -30,5 +30,17 @@ def get_note(note_id):
     return jsonify(dict(row)) if row else (jsonify({"error": "not found"}), 404)
 
 
+@app.post("/notes")
+def create_note():
+    data = request.get_json(force=True) or {}
+    title, body = str(data.get("title", ""))[:200], str(data.get("body", ""))[:5000]
+    if not title:
+        return jsonify({"error": "title required"}), 400
+    conn = db()
+    cur = conn.execute("INSERT INTO notes (title, body) VALUES (?, ?)", (title, body))
+    conn.commit()
+    return jsonify({"id": cur.lastrowid, "title": title, "body": body}), 201
+
+
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5001)
